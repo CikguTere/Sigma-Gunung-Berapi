@@ -1,0 +1,1174 @@
+<!DOCTYPE html>
+<html lang="id" class="dark"> <!-- Default Gelap agar tidak silau, bisa diubah -->
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MPI IPA: Gunung Berapi</title>
+    
+    <!-- Google Fonts: Nunito -->
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <!-- Konfigurasi Tailwind & Dark Mode -->
+    <script>
+        tailwind.config = {
+            darkMode: 'class', /* Mengaktifkan mode gelap berbasis class HTML */
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Nunito', 'sans-serif'] },
+                    colors: {
+                        duo: {
+                            green: '#10b981', greenDark: '#047857',
+                            blue: '#0ea5e9', blueDark: '#0284c7', /* Biru Laut */
+                            yellow: '#f59e0b', yellowDark: '#b45309',
+                            red: '#ef4444', redDark: '#b91c1c',
+                            volcano: '#f97316', volcanoDark: '#c2410c',
+                            text: '#ffffff', textLight: '#e2e8f0'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Nunito', sans-serif;
+            overflow-x: hidden;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        
+        .page-section { display: none; animation: fadeIn 0.3s ease-in-out; }
+        .page-section.active { display: block; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Latar Belakang Animasi (Glassmorphism Basis) */
+        .bg-shapes {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            z-index: -1; overflow: hidden; 
+            background: #e0f2fe; /* Light Mode Background */
+            transition: background 0.5s ease;
+        }
+        .dark .bg-shapes { background: #020617; } /* Dark Mode Background */
+
+        .shape {
+            position: absolute; filter: blur(120px); opacity: 0.6;
+            animation: float 25s ease-in-out infinite; transition: background 0.5s ease;
+        }
+        /* Warna Gelembung Light Mode (Sejuk & Lembut) */
+        .shape-1 { background: #bae6fd; width: 50vw; height: 50vw; top: -10%; left: -10%; }
+        .shape-2 { background: #99f6e4; width: 60vw; height: 60vw; bottom: -20%; right: -10%; animation-delay: -5s; }
+        .shape-3 { background: #c7d2fe; width: 40vw; height: 40vw; top: 30%; left: 40%; animation-delay: -10s; }
+        
+        /* Warna Gelembung Dark Mode (Neon Mewah) */
+        .dark .shape-1 { background: #ea580c; }
+        .dark .shape-2 { background: #4f46e5; }
+        .dark .shape-3 { background: #e11d48; }
+        
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(30px, -50px) scale(1.1); }
+            66% { transform: translate(-20px, 20px) scale(0.9); }
+        }
+
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
+        .btn-duo { transition: all 0.1s ease; position: relative; }
+        .btn-duo:active:not(:disabled) {
+            transform: translateY(4px); border-bottom-width: 0px !important; margin-top: 4px;
+        }
+        
+        .btn-green { background-color: #10b981; color: white; border-bottom: 4px solid #047857; }
+        .btn-blue { background-color: #0ea5e9; color: white; border-bottom: 4px solid #0284c7; }
+        .btn-volcano { background-color: #f97316; color: white; border-bottom: 4px solid #c2410c; }
+        .btn-red { background-color: #ef4444; color: white; border-bottom: 4px solid #b91c1c; }
+        
+        .btn-gray {
+            background-color: rgba(255, 255, 255, 0.8); backdrop-filter: blur(8px);
+            color: #1e293b; border: 2px solid rgba(0, 0, 0, 0.1); border-bottom: 4px solid rgba(0, 0, 0, 0.2);
+        }
+        .btn-gray:hover:not(:disabled) { background-color: rgba(241, 245, 249, 0.9); }
+        .dark .btn-gray {
+            background-color: rgba(30, 41, 59, 0.8); color: #f8fafc;
+            border: 2px solid rgba(255, 255, 255, 0.1); border-bottom: 4px solid rgba(0, 0, 0, 0.5);
+        }
+        .dark .btn-gray:hover:not(:disabled) { background-color: rgba(51, 65, 85, 0.9); }
+
+        /* KARTU KACA (GLASSMORPHISM) Dinamis */
+        .card-duo {
+            background: rgba(255, 255, 255, 0.75); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 1); border-bottom: 4px solid rgba(0, 0, 0, 0.1);
+            border-radius: 1.2rem; box-shadow: 0 10px 30px 0 rgba(0, 0, 0, 0.05);
+            transition: all 0.2s ease; color: #1e293b;
+        }
+        .dark .card-duo {
+            background: rgba(30, 41, 59, 0.65); border: 1px solid rgba(255, 255, 255, 0.08);
+            border-bottom: 4px solid rgba(0, 0, 0, 0.4); box-shadow: 0 10px 30px 0 rgba(0, 0, 0, 0.3); color: #f8fafc;
+        }
+        
+        .card-duo-hover:hover {
+            border-color: rgba(14, 165, 233, 0.6); background-color: rgba(224, 242, 254, 0.8); cursor: pointer;
+        }
+        .dark .card-duo-hover:hover {
+            border-color: rgba(14, 165, 233, 0.6); background-color: rgba(15, 23, 42, 0.8);
+        }
+
+        .input-duo {
+            background-color: rgba(255, 255, 255, 0.9); backdrop-filter: blur(12px);
+            border: 2px solid rgba(0, 0, 0, 0.1); border-radius: 1rem; color: #1e293b; transition: all 0.2s;
+        }
+        .dark .input-duo { background-color: rgba(15, 23, 42, 0.6); border: 2px solid rgba(255, 255, 255, 0.1); color: #f8fafc; }
+        
+        .input-duo::placeholder { color: #94a3b8; }
+        .input-duo:focus { outline: none; border-color: #0ea5e9; }
+        .dark .input-duo:focus { background-color: rgba(15, 23, 42, 0.9); }
+
+        /* Navigasi Bawah Aktif */
+        .nav-item { transition: all 0.2s ease; border-top: 3px solid transparent; }
+        .nav-item.tab-active {
+            color: #0ea5e9 !important; border-top: 3px solid #0ea5e9; border-radius: 1rem; margin-top: -3px;
+            background-color: rgba(14, 165, 233, 0.1); 
+        }
+        .dark .nav-item.tab-active { background-color: rgba(30, 58, 138, 0.5); }
+
+        /* Kustom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .dark ::-webkit-scrollbar-thumb { background: #475569; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .dark ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+    </style>
+</head>
+<body class="h-screen flex flex-col antialiased bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-50">
+
+    <div class="bg-shapes">
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+        <div class="shape shape-3"></div>
+    </div>
+
+    <header id="topNav" class="hidden bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl border-b border-slate-200 dark:border-slate-800 sticky top-0 z-50">
+        <div class="max-w-md md:max-w-3xl mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900/50 border-2 border-blue-300 dark:border-blue-500/50 rounded-full flex items-center justify-center text-duo-blue">
+                    <i class="fa-solid fa-user-graduate text-2xl"></i>
+                </div>
+                <div>
+                    <h2 id="displayUserName" class="font-black text-lg text-slate-800 dark:text-white leading-tight drop-shadow-sm">Siswa</h2>
+                    <p id="displayUserSchool" class="text-sm font-bold text-slate-500 dark:text-slate-300">Sekolah</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-4 w-1/2 justify-end">
+                <div class="flex items-center gap-2 w-full max-w-[150px]">
+                    <i class="fa-solid fa-fire text-duo-volcano text-xl"></i>
+                    <div class="w-full h-5 bg-slate-200 dark:bg-slate-800 rounded-full relative overflow-hidden shadow-inner border border-slate-300 dark:border-slate-700">
+                        <div class="absolute top-1 left-1 right-1 h-1.5 bg-white/50 dark:bg-white/20 rounded-full z-10"></div>
+                        <div id="progressBar" class="h-full bg-duo-yellow rounded-full w-0 transition-all duration-500 relative"></div>
+                    </div>
+                </div>
+                <button onclick="logout()" class="text-slate-400 hover:text-duo-red transition-colors bg-slate-100 dark:bg-slate-800/50 p-2 rounded-xl" title="Keluar">
+                    <i class="fa-solid fa-right-from-bracket text-xl"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-1 overflow-y-auto w-full max-w-md md:max-w-4xl mx-auto relative pb-24 md:pb-8 pt-4 md:pt-8 px-4" id="mainContainer">
+        
+        <!-- ==================== HALAMAN LOGIN ==================== -->
+        <section id="sec-login" class="page-section h-full active relative">
+            
+            <!-- Tema Selector di Pojok Kanan Atas -->
+            <div class="absolute top-4 right-4 md:top-6 md:right-8 z-50">
+                <div class="bg-white/60 dark:bg-slate-800/60 backdrop-blur-md p-1.5 rounded-2xl border border-white/60 dark:border-slate-700/50 shadow-sm flex gap-1">
+                    <button type="button" onclick="setTheme('light')" id="btn-theme-light" class="px-3 py-2 rounded-xl font-black text-xs border-b-[3px] transition-all bg-white text-slate-700 border-slate-300 hover:bg-slate-50 shadow-sm flex items-center justify-center" title="Mode Terang">
+                        <i class="fa-solid fa-sun text-yellow-500 mr-1.5 md:mr-2 text-base"></i> Terang
+                    </button>
+                    <button type="button" onclick="setTheme('dark')" id="btn-theme-dark" class="px-3 py-2 rounded-xl font-black text-xs border-b-[3px] transition-all bg-slate-800 text-white border-slate-900 hover:bg-slate-700 shadow-sm flex items-center justify-center" title="Mode Gelap">
+                        <i class="fa-solid fa-moon text-blue-300 mr-1.5 md:mr-2 text-base"></i> Gelap
+                    </button>
+                </div>
+            </div>
+
+            <div class="min-h-[85vh] flex flex-col justify-center items-center py-12 md:py-6 mt-8 md:mt-0">
+                
+                <div class="relative w-full flex flex-col items-center mb-10 z-10">
+                    <!-- Efek Cahaya Latar Belakang -->
+                    <div class="absolute top-10 left-1/2 -translate-x-1/2 w-56 h-56 bg-orange-400/20 dark:bg-red-500/20 blur-[50px] rounded-full pointer-events-none"></div>
+
+                    <!-- Ikon Utama Gambar Gunung Meletus -->
+                    <div class="relative inline-block mb-8 group cursor-pointer">
+                        <!-- Lapisan Aura Panas (Glow) berdenyut -->
+                        <div class="absolute inset-0 bg-gradient-to-tr from-orange-500 to-red-600 rounded-[2.5rem] blur-xl opacity-40 group-hover:opacity-80 animate-pulse transition-all duration-700"></div>
+                        
+                        <!-- Lapisan Bayangan Miring -->
+                        <div class="absolute inset-0 bg-gradient-to-tr from-orange-500 to-red-600 rounded-[2rem] rotate-6 group-hover:rotate-12 transition-transform duration-500 shadow-xl opacity-90"></div>
+                        
+                        <!-- Bingkai Gambar Depan -->
+                        <div class="relative w-36 h-36 md:w-40 md:h-40 rounded-[2rem] flex items-center justify-center border-[4px] border-white dark:border-slate-800 shadow-2xl transform -rotate-3 group-hover:-rotate-6 group-hover:scale-105 transition-all duration-500 overflow-hidden bg-slate-900">
+                            <!-- Gambar Gunung Meletus -->
+                            <img src="https://github.com/user-attachments/assets/ce8e72f3-bd4f-4090-ad46-1e4ebf03ce7e" alt="Gunung Meletus" class="w-full h-full object-cover transform scale-110 group-hover:scale-125 transition-transform duration-700 ease-in-out">
+                            
+                            <!-- Overlay gradasi gelap agar dramatis -->
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+                        </div>
+                        
+                        <!-- Ikon Kecil (Badge Api) -->
+                        <div class="absolute -bottom-3 -right-3 bg-gradient-to-br from-yellow-400 to-orange-500 border-4 border-white dark:border-slate-900 w-14 h-14 rounded-full flex items-center justify-center text-white font-black text-2xl shadow-xl z-10 group-hover:scale-125 group-hover:rotate-12 transition-all duration-300">
+                            <i class="fa-solid fa-fire-flame-curved drop-shadow-md"></i>
+                        </div>
+                    </div>
+
+                    <!-- Teks Judul Hierarki Profesional -->
+                    <h2 class="text-xs md:text-sm font-black text-slate-500 dark:text-slate-400 tracking-[0.25em] uppercase mb-3 drop-shadow-sm">
+                        Selamat Datang Di
+                    </h2>
+                    
+                    <h1 class="text-4xl md:text-5xl lg:text-6xl font-black text-slate-800 dark:text-white tracking-tight drop-shadow-md mb-5 text-center leading-tight">
+                        MPI IPA <span class="bg-clip-text text-transparent bg-gradient-to-r from-duo-blue to-teal-400">Kelas 7</span>
+                    </h1>
+                    
+                    <!-- Subjudul Badge Kaca -->
+                    <div class="inline-flex items-center gap-3 bg-white/70 dark:bg-slate-800/70 backdrop-blur-xl py-2 px-6 rounded-full border border-slate-200 dark:border-slate-600 shadow-sm relative overflow-hidden group cursor-default">
+                        <!-- Efek Kilap Kaca Melintas -->
+                        <div class="absolute top-0 -left-[100%] w-1/2 h-full bg-gradient-to-r from-transparent via-white/50 dark:via-white/10 to-transparent skew-x-12 group-hover:left-[200%] transition-all duration-700 ease-in-out z-0"></div>
+                        
+                        <i class="fa-solid fa-fire text-duo-volcano text-xl drop-shadow relative z-10"></i>
+                        <p class="font-bold text-slate-700 dark:text-slate-200 text-lg drop-shadow-sm relative z-10">Gunung Berapi & Mitigasinya</p>
+                    </div>
+                </div>
+
+                <div class="w-full max-w-sm">
+                    <form id="loginForm" onsubmit="event.preventDefault(); login();" class="space-y-4">
+                        <div>
+                            <input type="text" id="inputNama" required placeholder="Siapa namamu?" class="w-full px-6 py-4 input-duo font-bold text-xl">
+                        </div>
+                        <div>
+                            <input type="text" id="inputSekolah" required placeholder="Asal Sekolah (Cth: SMPN 1)" class="w-full px-6 py-4 input-duo font-bold text-xl">
+                        </div>
+                        <div>
+                            <input type="text" id="inputProvinsi" required placeholder="Ketik Provinsimu..." class="w-full px-6 py-4 input-duo font-bold text-xl">
+                        </div>
+                        <div class="pt-4">
+                            <button type="submit" class="w-full btn-duo btn-blue font-black py-4 rounded-2xl text-2xl tracking-wide uppercase shadow-[0_10px_20px_rgba(14,165,233,0.3)]">
+                                Mulai Belajar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== HALAMAN BERANDA ==================== -->
+        <section id="sec-beranda" class="page-section">
+            <div class="bg-gradient-to-br from-white/90 to-blue-50/90 dark:from-slate-800/90 dark:to-slate-900/90 backdrop-blur-xl border border-white dark:border-slate-700 p-6 md:p-8 rounded-[2rem] mb-8 relative overflow-hidden shadow-2xl flex items-center justify-between">
+                <div class="relative z-10 w-2/3">
+                    <h1 class="text-3xl md:text-4xl font-black mb-3 leading-tight text-slate-800 dark:text-white drop-shadow-lg">Ayo pelajari Gunung Berapi!</h1>
+                    <p class="font-bold text-slate-600 dark:text-slate-300 mb-6 text-lg drop-shadow-md">Kenali bahayanya, pahami manfaatnya.</p>
+                    <button onclick="navTo('materi')" class="btn-duo btn-blue font-black py-3 px-8 rounded-2xl uppercase tracking-wider text-lg shadow-lg">
+                        Mulai <i class="fa-solid fa-play ml-2"></i>
+                    </button>
+                </div>
+                <div class="w-1/3 flex justify-end relative z-10">
+                    <i class="fa-solid fa-mountain-sun text-8xl md:text-9xl text-slate-300 dark:text-white opacity-90 drop-shadow-2xl transform -rotate-6"></i>
+                </div>
+                <!-- Ornamen cahaya lembut -->
+                <div class="absolute -bottom-10 -right-10 w-48 h-48 bg-blue-400 dark:bg-blue-500 opacity-20 rounded-full blur-3xl"></div>
+                <div class="absolute -top-10 left-20 w-32 h-32 bg-teal-400 dark:bg-teal-500 opacity-20 rounded-full blur-2xl"></div>
+            </div>
+
+            <h2 class="text-2xl font-black text-slate-800 dark:text-white mb-5 px-2 drop-shadow-md">Target Kita Hari Ini:</h2>
+            <div class="space-y-4 mb-8">
+                <div class="card-duo p-5 flex items-center gap-5">
+                    <div class="w-14 h-14 rounded-full bg-orange-100 dark:bg-orange-900/60 flex items-center justify-center text-duo-volcano shrink-0 text-2xl border-2 border-orange-300 dark:border-orange-500/50">
+                        <i class="fa-solid fa-book"></i>
+                    </div>
+                    <p class="font-bold text-slate-700 dark:text-slate-100 text-lg">Memahami proses terjadinya gunung berapi.</p>
+                </div>
+                <div class="card-duo p-5 flex items-center gap-5">
+                    <div class="w-14 h-14 rounded-full bg-indigo-100 dark:bg-indigo-900/60 flex items-center justify-center text-indigo-500 dark:text-indigo-400 shrink-0 text-2xl border-2 border-indigo-300 dark:border-indigo-500/50">
+                        <i class="fa-solid fa-bomb"></i>
+                    </div>
+                    <p class="font-bold text-slate-700 dark:text-slate-100 text-lg">Mengetahui tipe-tipe letusan yang ada.</p>
+                </div>
+                <div class="card-duo p-5 flex items-center gap-5">
+                    <div class="w-14 h-14 rounded-full bg-blue-100 dark:bg-blue-900/60 flex items-center justify-center text-duo-blue shrink-0 text-2xl border-2 border-blue-300 dark:border-blue-500/50">
+                        <i class="fa-solid fa-scale-balanced"></i>
+                    </div>
+                    <p class="font-bold text-slate-700 dark:text-slate-100 text-lg">Menganalisis dampak letusan bagi manusia.</p>
+                </div>
+                <div class="card-duo p-5 flex items-center gap-5">
+                    <div class="w-14 h-14 rounded-full bg-emerald-100 dark:bg-emerald-900/60 flex items-center justify-center text-duo-green shrink-0 text-2xl border-2 border-emerald-300 dark:border-emerald-500/50">
+                        <i class="fa-solid fa-shield-heart"></i>
+                    </div>
+                    <p class="font-bold text-slate-700 dark:text-slate-100 text-lg">Menguasai langkah evakuasi & mitigasi.</p>
+                </div>
+            </div>
+
+            <div class="card-duo bg-orange-50 dark:bg-orange-900/40 border-orange-200 dark:border-orange-500/50 p-6 flex flex-col md:flex-row items-center gap-5 text-center md:text-left">
+                <div class="bg-orange-100 dark:bg-orange-950 p-4 rounded-full">
+                    <i class="fa-solid fa-circle-info text-5xl text-duo-volcano drop-shadow-md"></i>
+                </div>
+                <div>
+                    <h3 class="font-black text-slate-800 dark:text-white text-xl mb-1">Tahukah Kamu?</h3>
+                    <p class="font-bold text-slate-600 dark:text-slate-300 text-lg">Indonesia berada di jalur <span class="text-orange-600 dark:text-duo-yellow font-black">Cincin Api Pasifik</span>, membuatnya memiliki ratusan gunung berapi aktif!</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== HALAMAN MATERI ==================== -->
+        <section id="sec-materi" class="page-section">
+            <div class="flex flex-col md:flex-row h-full gap-5">
+                <div class="w-full md:w-1/3 overflow-x-auto md:overflow-y-visible pb-3 md:pb-0 scrollbar-hide">
+                    <ul class="flex md:flex-col gap-4 w-max md:w-full px-1 py-1" id="materiTabs">
+                        <!-- Digenerate oleh JS -->
+                    </ul>
+                </div>
+
+                <div class="w-full md:w-2/3 card-duo p-6 md:p-8 min-h-[60vh] flex flex-col" id="materiContentArea">
+                    <div class="h-full flex flex-col items-center justify-center text-center p-8 my-auto">
+                        <i class="fa-solid fa-book-open text-7xl mb-6 text-slate-400 dark:text-slate-600"></i>
+                        <p class="font-black text-slate-500 dark:text-slate-400 text-2xl leading-relaxed">Pilih buku materi di samping untuk mulai membaca!</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== HALAMAN KUIS ==================== -->
+        <section id="sec-kuis" class="page-section">
+            <div class="max-w-3xl mx-auto">
+                <div id="quizIntro" class="text-center py-12 card-duo p-8 md:p-12">
+                    <div class="inline-block bg-yellow-100 dark:bg-yellow-900/50 p-6 rounded-full mb-6 border-4 border-duo-yellow">
+                        <i class="fa-solid fa-star text-7xl text-duo-yellow drop-shadow-xl"></i>
+                    </div>
+                    <h1 class="text-4xl font-black text-slate-800 dark:text-white mb-4 tracking-tight drop-shadow-md">Waktunya Ujian!</h1>
+                    <p class="text-slate-600 dark:text-slate-300 font-bold text-xl mb-10 leading-relaxed">
+                        Buktikan kemampuanmu. Jawab 10 pertanyaan dengan benar untuk mendapatkan XP penuh!
+                    </p>
+                    <button onclick="startQuiz()" class="btn-duo btn-blue w-full md:w-auto font-black py-4 px-12 rounded-2xl text-2xl tracking-wide uppercase shadow-[0_10px_20px_rgba(14,165,233,0.4)]">
+                        Mulai Tantangan
+                    </button>
+                </div>
+
+                <div id="quizArea" class="hidden">
+                    <div class="flex items-center gap-4 mb-8">
+                        <button onclick="navTo('beranda')" class="text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white text-2xl bg-slate-200 dark:bg-slate-800 p-2 rounded-xl border border-slate-300 dark:border-slate-700"><i class="fa-solid fa-xmark"></i></button>
+                        <div class="flex-1 h-5 bg-slate-200 dark:bg-slate-800 rounded-full relative overflow-hidden shadow-inner border border-slate-300 dark:border-slate-700">
+                            <div class="absolute top-1 left-1 right-1 h-1.5 bg-white/50 dark:bg-white/20 rounded-full z-10"></div>
+                            <div class="bg-duo-green h-full rounded-full transition-all duration-300" id="quizProgress" style="width: 10%"></div>
+                        </div>
+                        <span class="font-black text-slate-700 dark:text-white text-xl" id="quizNumber">1/10</span>
+                    </div>
+                    
+                    <div class="card-duo p-6 md:p-8 mb-6 bg-white/80 dark:bg-slate-800/80">
+                        <h2 class="text-2xl md:text-3xl font-black text-slate-800 dark:text-white leading-relaxed drop-shadow-sm dark:drop-shadow-md" id="questionText">Pertanyaan disini?</h2>
+                    </div>
+                    
+                    <div class="space-y-4 mb-8" id="optionsArea">
+                        <!-- Opsi Jawaban digenerate JS -->
+                    </div>
+
+                    <div id="nextBtnContainer" class="hidden border-t border-slate-300 dark:border-slate-700/50 pt-8 mt-6">
+                        <button onclick="nextQuestion()" id="btnNextAction" class="w-full btn-duo btn-blue font-black py-4 rounded-2xl text-2xl tracking-wide uppercase shadow-lg">
+                            Soal Selanjutnya
+                        </button>
+                    </div>
+                </div>
+
+                <div id="quizResult" class="hidden text-center py-12 card-duo p-8">
+                    <div id="resultIcon" class="mb-8"></div>
+                    <h1 class="text-4xl font-black text-slate-800 dark:text-white mb-3 tracking-tight drop-shadow-md">Latihan Selesai!</h1>
+                    <p class="text-slate-600 dark:text-slate-300 font-bold text-xl mb-8">Total XP / Poin yang kamu dapatkan:</p>
+                    
+                    <div class="inline-block bg-yellow-50 dark:bg-yellow-900/40 border-4 border-yellow-300 dark:border-yellow-600/50 rounded-3xl px-12 py-8 mb-10 shadow-inner">
+                        <div class="text-7xl font-black text-yellow-600 dark:text-duo-yellow drop-shadow-lg" id="scoreText">0</div>
+                    </div>
+                    
+                    <div class="space-y-4 max-w-md mx-auto">
+                        <button onclick="navTo('peringkat')" class="w-full btn-duo btn-blue font-black py-4 rounded-2xl text-xl uppercase tracking-wide shadow-lg">
+                            Lihat Papan Peringkat
+                        </button>
+                        <button onclick="startQuiz()" class="w-full btn-duo btn-gray font-black py-4 rounded-2xl text-xl uppercase tracking-wide">
+                            Ulangi Kuis
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== HALAMAN PERINGKAT ==================== -->
+        <section id="sec-peringkat" class="page-section h-full">
+            <div class="max-w-3xl mx-auto h-full flex flex-col">
+                <div class="text-center mb-6">
+                    <div class="inline-block bg-yellow-100 dark:bg-yellow-900/50 p-5 rounded-full mb-4 border-4 border-duo-yellow shadow-sm">
+                        <i class="fa-solid fa-trophy text-6xl text-duo-yellow drop-shadow-xl"></i>
+                    </div>
+                    <h1 class="text-3xl md:text-4xl font-black text-slate-800 dark:text-white mb-2 tracking-tight drop-shadow-md">Papan Peringkat</h1>
+                    <p class="text-slate-600 dark:text-slate-300 font-bold text-lg leading-relaxed">
+                        Skor Tertinggi Ahli Gunung Berapi (Real-Time)
+                    </p>
+                </div>
+                
+                <!-- Wadah List Papan Peringkat Real-Time -->
+                <div id="leaderboardList" class="flex-1 overflow-y-auto px-2 pb-10 scrollbar-hide space-y-3">
+                    <!-- Animasi Loading saat memuat data -->
+                    <div class="flex justify-center items-center h-32">
+                        <i class="fa-solid fa-spinner fa-spin text-4xl text-duo-blue"></i>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== HALAMAN KREATOR ==================== -->
+        <section id="sec-kreator" class="page-section h-full">
+            <div class="max-w-3xl mx-auto h-full flex flex-col">
+                <div class="text-center mb-8">
+                    <div class="relative w-full flex flex-col items-center mb-10 z-10">
+                        <!-- Efek Cahaya Latar Belakang Profil -->
+                        <div class="absolute top-10 left-1/2 -translate-x-1/2 w-56 h-56 bg-blue-400/20 dark:bg-indigo-500/20 blur-[50px] rounded-full pointer-events-none"></div>
+    
+                        <!-- Ikon Utama Profil Kreator -->
+                        <div class="relative inline-block mb-8 group cursor-pointer mt-6">
+                            <!-- Lapisan Aura (Glow) berdenyut -->
+                            <div class="absolute inset-0 bg-gradient-to-tr from-blue-500 to-indigo-600 rounded-full blur-xl opacity-40 group-hover:opacity-80 animate-pulse transition-all duration-700"></div>
+                            
+                            <!-- Lapisan Bayangan Miring -->
+                            <div class="absolute inset-0 bg-gradient-to-tr from-blue-500 to-indigo-600 rounded-full rotate-6 group-hover:rotate-12 transition-transform duration-500 shadow-xl opacity-90"></div>
+                            
+                            <!-- Bingkai Gambar Depan -->
+                            <div class="relative w-36 h-36 md:w-40 md:h-40 rounded-full flex items-center justify-center border-[4px] border-white dark:border-slate-800 shadow-2xl transform group-hover:scale-105 transition-all duration-500 overflow-hidden bg-slate-100">
+                                <!-- Foto Profil Kreator -->
+                                <img src="https://github.com/user-attachments/assets/f07e502d-b2dc-4d90-b8c4-bd5f3cb83e04" alt="Foto Kreator" class="w-full h-full object-cover object-top transform group-hover:scale-110 transition-transform duration-700 ease-in-out">
+                            </div>
+                            
+                            <!-- Ikon Kecil (Badge Verified/Centang) -->
+                            <div class="absolute -bottom-2 -right-2 bg-gradient-to-br from-blue-400 to-blue-600 border-4 border-white dark:border-slate-900 w-12 h-12 rounded-full flex items-center justify-center text-white font-black text-xl shadow-xl z-10 group-hover:scale-125 transition-all duration-300">
+                                <i class="fa-solid fa-check drop-shadow-md"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="pt-24 pb-10 px-4 md:px-8 bg-white/80 dark:bg-slate-800/90 backdrop-blur-sm">
+                        <h2 class="text-2xl md:text-3xl font-black text-slate-800 dark:text-white mb-2 leading-tight">Theresia Sri Rahayu</h2>
+                        <p class="text-blue-600 dark:text-blue-400 font-black text-sm md:text-base mb-6 drop-shadow-sm uppercase tracking-wide">Duta Teknologi Kemendikdasmen</p>
+                        <p class="text-slate-700 dark:text-slate-300 text-base mb-8 font-medium leading-relaxed bg-slate-50 dark:bg-slate-900/50 p-4 rounded-xl border border-slate-200 dark:border-slate-700">
+                            Media Pembelajaran ini dirancang agar siswa lebih termotivasi belajar sains secara mandiri dan inovatif.
+                        </p>
+                        <div class="flex flex-col md:flex-row justify-center items-center gap-4">
+                            <a href="https://wa.me/6285222201100" target="_blank" class="btn-duo btn-gray px-6 py-3 rounded-2xl flex items-center justify-center gap-3 !border-b-4 hover:bg-emerald-50 dark:hover:bg-emerald-900/40 transition-colors w-full md:w-auto">
+                                <i class="fa-brands fa-whatsapp text-2xl text-emerald-500 dark:text-emerald-400"></i>
+                                <span class="font-bold text-slate-700 dark:text-slate-200">085222201100</span>
+                            </a>
+                            <a href="https://web.facebook.com/theresia.srie.5" target="_blank" class="btn-duo btn-gray px-6 py-3 rounded-2xl flex items-center justify-center gap-3 !border-b-4 hover:bg-blue-50 dark:hover:bg-blue-900/40 transition-colors w-full md:w-auto">
+                                <i class="fa-brands fa-facebook text-2xl text-blue-600 dark:text-blue-400"></i>
+                                <span class="font-bold text-slate-700 dark:text-slate-200">Theresia Sri Rahayu</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <nav id="bottomNav" class="hidden bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl border-t border-slate-200 dark:border-slate-700/50 sticky bottom-0 z-50 md:static px-2 pb-4 pt-2 shadow-[0_-10px_30px_rgba(0,0,0,0.05)] dark:shadow-[0_-10px_30px_rgba(0,0,0,0.5)]">
+        <div class="max-w-md md:max-w-3xl mx-auto flex justify-between">
+            <button id="nav-beranda" onclick="navTo('beranda')" class="nav-item flex-1 flex flex-col items-center py-3 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/80 rounded-2xl">
+                <i class="fa-solid fa-house mb-1.5 text-2xl"></i>
+                <span class="text-xs font-black tracking-wide uppercase mt-1">Beranda</span>
+            </button>
+            <button id="nav-materi" onclick="navTo('materi')" class="nav-item flex-1 flex flex-col items-center py-3 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/80 rounded-2xl">
+                <i class="fa-solid fa-book mb-1.5 text-2xl"></i>
+                <span class="text-xs font-black tracking-wide uppercase mt-1">Materi</span>
+            </button>
+            <button id="nav-kuis" onclick="navTo('kuis')" class="nav-item flex-1 flex flex-col items-center py-3 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/80 rounded-2xl">
+                <i class="fa-solid fa-shield-halved mb-1.5 text-2xl"></i>
+                <span class="text-xs font-black tracking-wide uppercase mt-1">Kuis</span>
+            </button>
+            <button id="nav-peringkat" onclick="navTo('peringkat')" class="nav-item flex-1 flex flex-col items-center py-3 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/80 rounded-2xl">
+                <i class="fa-solid fa-trophy mb-1.5 text-2xl"></i>
+                <span class="text-xs font-black tracking-wide uppercase mt-1">Peringkat</span>
+            </button>
+            <button id="nav-kreator" onclick="navTo('kreator')" class="nav-item flex-1 flex flex-col items-center py-3 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/80 rounded-2xl">
+                <i class="fa-solid fa-user-astronaut mb-1.5 text-2xl"></i>
+                <span class="text-xs font-black tracking-wide uppercase mt-1">Kreator</span>
+            </button>
+        </div>
+    </nav>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Expose functions to window
+        window.login = login;
+        window.logout = logout;
+        window.navTo = navTo;
+        window.showSubMateri = showSubMateri;
+        window.startQuiz = startQuiz;
+        window.selectAnswer = selectAnswer;
+        window.nextQuestion = nextQuestion;
+        window.setTheme = setTheme;
+        
+        // --- LOGIKA TEMA TERANG/GELAP ---
+        function setTheme(mode) {
+            playSound('click');
+            const htmlElement = document.documentElement;
+            const btnLight = document.getElementById('btn-theme-light');
+            const btnDark = document.getElementById('btn-theme-dark');
+
+            if (mode === 'light') {
+                htmlElement.classList.remove('dark');
+                btnLight.classList.add('border-blue-500', 'bg-blue-50');
+                btnDark.classList.remove('border-blue-500');
+                localStorage.setItem('mpiDuoTheme', 'light');
+            } else {
+                htmlElement.classList.add('dark');
+                btnDark.classList.add('border-blue-500');
+                btnLight.classList.remove('border-blue-500', 'bg-blue-50');
+                localStorage.setItem('mpiDuoTheme', 'dark');
+            }
+        }
+
+        function loadSavedTheme() {
+            const savedTheme = localStorage.getItem('mpiDuoTheme') || 'dark'; // Default Dark
+            setTheme(savedTheme);
+        }
+
+        // --- FIREBASE SETUP ---
+        let app, db, auth, currentUserId;
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+
+        async function initFirebase() {
+            if (typeof __firebase_config === 'undefined') return;
+            try {
+                const firebaseConfig = JSON.parse(__firebase_config);
+                app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+
+                let userCredential;
+                if (typeof __initial_auth_token !== 'undefined') {
+                    userCredential = await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    userCredential = await signInAnonymously(auth);
+                }
+                currentUserId = userCredential.user.uid;
+                
+                listenLeaderboard();
+            } catch (e) {
+                console.error("Gagal inisialisasi Firebase:", e);
+            }
+        }
+
+        async function saveScoreToLeaderboard(score) {
+            if (!auth || !auth.currentUser) return;
+            try {
+                const ref = doc(db, 'artifacts', appId, 'public', 'data', 'leaderboard', currentUserId);
+                const docSnap = await getDoc(ref);
+                let shouldSave = true;
+                
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    if (data.score >= score) shouldSave = false; 
+                }
+                
+                if (shouldSave) {
+                    await setDoc(ref, {
+                        userId: currentUserId,
+                        nama: userState.nama,
+                        sekolah: userState.sekolah,
+                        provinsi: userState.provinsi,
+                        score: score,
+                        timestamp: Date.now()
+                    }, { merge: true });
+                }
+            } catch(e) {}
+        }
+
+        function listenLeaderboard() {
+            if (!auth || !auth.currentUser) return;
+            const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'leaderboard');
+            
+            onSnapshot(colRef, (snapshot) => {
+                let data = [];
+                snapshot.forEach(doc => data.push(doc.data()));
+                
+                data.sort((a, b) => {
+                    if (b.score !== a.score) return b.score - a.score;
+                    return a.timestamp - b.timestamp;
+                });
+                
+                renderLeaderboard(data);
+            });
+        }
+
+        function renderLeaderboard(data) {
+            const container = document.getElementById('leaderboardList');
+            if(!container) return;
+            container.innerHTML = '';
+            
+            if (data.length === 0) {
+                container.innerHTML = '<div class="flex flex-col items-center justify-center h-full text-slate-400"><i class="fa-solid fa-ghost text-5xl mb-4"></i><p class="font-bold text-center text-lg">Belum ada data.<br>Jadilah yang pertama!</p></div>';
+                return;
+            }
+
+            data.forEach((item, index) => {
+                let rankBadge = '';
+                if (index === 0) rankBadge = '<div class="w-14 h-14 shrink-0 rounded-full bg-duo-yellow border-4 border-yellow-600 flex items-center justify-center text-slate-900 font-black text-2xl shadow-md"><i class="fa-solid fa-crown absolute -mt-10 text-yellow-500 text-lg drop-shadow"></i>1</div>';
+                else if (index === 1) rankBadge = '<div class="w-14 h-14 shrink-0 rounded-full bg-slate-200 dark:bg-slate-300 border-4 border-slate-400 flex items-center justify-center text-slate-800 font-black text-2xl shadow-md">2</div>';
+                else if (index === 2) rankBadge = '<div class="w-14 h-14 shrink-0 rounded-full bg-orange-500 border-4 border-orange-600 flex items-center justify-center text-white font-black text-2xl shadow-md">3</div>';
+                else rankBadge = `<div class="w-14 h-14 shrink-0 rounded-full bg-white dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300 font-black border-2 border-slate-300 dark:border-slate-600 text-xl shadow-sm">${index+1}</div>`;
+
+                const isMe = item.userId === currentUserId;
+                const borderClass = isMe ? 'border-duo-blue bg-blue-50 dark:bg-blue-900/40' : 'border-slate-200 dark:border-slate-700 bg-white/80 dark:bg-slate-800/80';
+                
+                container.innerHTML += `
+                    <div class="flex items-center gap-5 p-5 rounded-2xl border ${borderClass} border-b-4 mb-4 shadow-sm">
+                        ${rankBadge}
+                        <div class="flex-1 min-w-0">
+                            <h3 class="font-black text-slate-800 dark:text-white truncate text-xl">${item.nama} ${isMe ? '<span class="ml-2 text-xs bg-duo-blue text-white px-3 py-1 rounded-full align-middle uppercase tracking-wider">Kamu</span>' : ''}</h3>
+                            <p class="text-base font-bold text-slate-500 dark:text-slate-400 truncate">${item.sekolah}</p>
+                        </div>
+                        <div class="text-3xl font-black text-yellow-600 dark:text-duo-yellow">${item.score} <span class="text-sm">XP</span></div>
+                    </div>
+                `;
+            });
+        }
+
+        let userState = {
+            nama: '', sekolah: '', provinsi: '',
+            progress: { materi: [false, false, false, false, false], kuisSelesai: false },
+            awarded: false
+        };
+
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playSound(type) {
+            try {
+                if(audioCtx.state === 'suspended') audioCtx.resume();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                
+                if(type === 'click') {
+                    osc.type = 'sine'; osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.1);
+                    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+                    osc.start(); osc.stop(audioCtx.currentTime + 0.1);
+                } else if (type === 'correct') {
+                    osc.type = 'sine'; osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+                    osc.frequency.setValueAtTime(1200, audioCtx.currentTime + 0.1);
+                    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                    gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.3);
+                    osc.start(); osc.stop(audioCtx.currentTime + 0.3);
+                } else if (type === 'wrong') {
+                    osc.type = 'square'; osc.frequency.setValueAtTime(300, audioCtx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(150, audioCtx.currentTime + 0.2);
+                    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                    gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.2);
+                    osc.start(); osc.stop(audioCtx.currentTime + 0.2);
+                }
+            } catch(e) {}
+        }
+
+        window.onload = () => {
+            loadSavedTheme(); // Muat tema di awal
+            const savedData = localStorage.getItem('mpiDuoData_v4');
+            if (savedData) {
+                userState = JSON.parse(savedData);
+                setupDashboard();
+                navTo('beranda');
+            } else {
+                navTo('login');
+            }
+            renderMateriTabs();
+        };
+
+        function saveData() {
+            localStorage.setItem('mpiDuoData_v4', JSON.stringify(userState));
+            updateProgressUI();
+        }
+
+        function login() {
+            const nama = document.getElementById('inputNama').value;
+            const sekolah = document.getElementById('inputSekolah').value;
+            const provinsi = document.getElementById('inputProvinsi').value;
+
+            if (nama && sekolah && provinsi) {
+                userState.nama = nama; userState.sekolah = sekolah; userState.provinsi = provinsi;
+                playSound('click');
+                saveData();
+                setupDashboard();
+                navTo('beranda');
+            }
+        }
+
+        function logout() {
+            const isDark = document.documentElement.classList.contains('dark');
+            Swal.fire({
+                title: 'Yakin mau keluar?',
+                text: "Progres belajarmu akan dihapus!",
+                icon: 'warning',
+                showCancelButton: true,
+                background: isDark ? '#1e293b' : '#ffffff',
+                color: isDark ? '#f8fafc' : '#1e293b',
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#64748b',
+                confirmButtonText: 'Ya, Keluar',
+                customClass: { popup: 'rounded-3xl border-2 border-slate-300 dark:border-slate-700' }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    localStorage.removeItem('mpiDuoData_v4');
+                    userState = { nama: '', sekolah: '', provinsi: '', progress: { materi: [false, false, false, false, false], kuisSelesai: false }, awarded: false };
+                    document.getElementById('topNav').classList.add('hidden');
+                    document.getElementById('bottomNav').classList.add('hidden');
+                    document.getElementById('inputNama').value = ''; document.getElementById('inputSekolah').value = ''; document.getElementById('inputProvinsi').value = '';
+                    navTo('login');
+                }
+            });
+        }
+
+        function setupDashboard() {
+            document.getElementById('displayUserName').textContent = userState.nama || 'Siswa';
+            document.getElementById('displayUserSchool').textContent = userState.sekolah || 'Sekolah';
+            document.getElementById('topNav').classList.remove('hidden');
+            document.getElementById('bottomNav').classList.remove('hidden');
+            updateProgressUI();
+        }
+
+        function navTo(page) {
+            playSound('click');
+            document.querySelectorAll('.page-section').forEach(sec => sec.classList.remove('active'));
+            const targetSec = document.getElementById(`sec-${page}`);
+            if (targetSec) targetSec.classList.add('active');
+            
+            if(page !== 'login') {
+                document.querySelectorAll('.nav-item').forEach(item => {
+                    item.classList.remove('tab-active');
+                });
+                const targetNavBtn = document.getElementById(`nav-${page}`);
+                if(targetNavBtn) {
+                    targetNavBtn.classList.add('tab-active');
+                }
+            }
+            window.scrollTo(0,0);
+        }
+
+        function updateProgressUI() {
+            let materiDone = userState.progress.materi.filter(Boolean).length;
+            let percent = (materiDone * 10); 
+            if(userState.progress.kuisSelesai) percent += 50; 
+
+            document.getElementById('progressBar').style.width = `${percent}%`;
+
+            if(percent === 100 && !userState.awarded) {
+                userState.awarded = true;
+                saveData();
+                const isDark = document.documentElement.classList.contains('dark');
+                setTimeout(() => {
+                    Swal.fire({
+                        title: 'Luar Biasa!',
+                        text: 'Kamu berhasil menyelesaikan semua misi!',
+                        icon: 'success',
+                        background: isDark ? '#1e293b' : '#ffffff',
+                        color: isDark ? '#f8fafc' : '#1e293b',
+                        confirmButtonColor: '#0ea5e9',
+                        customClass: { popup: 'rounded-3xl border-2 border-slate-300 dark:border-slate-700', confirmButton: 'btn-duo btn-blue w-full text-xl rounded-2xl py-3' }
+                    });
+                }, 1000);
+            }
+        }
+
+        const materiData = [
+            {
+                title: "Apa itu Gunung Berapi?",
+                icon: "fa-mountain",
+                content: `
+                    <h2 class="text-3xl md:text-4xl font-black text-slate-800 dark:text-white mb-6">Pengertian & Asal Mula</h2>
+                    
+                    <div class="w-full rounded-3xl border-4 border-slate-300 dark:border-slate-600 overflow-hidden shadow-lg mb-8 bg-slate-100 dark:bg-slate-900 relative z-10 h-[400px] md:h-[450px]">
+                        <iframe src='https://viewer.assemblrworld.com/Embed/-papELtwrueya5TY3W3C' allow="camera; microphone; gyroscope; accelerometer; magnetometer; xr-spatial-tracking; fullscreen" allowfullscreen class="w-full h-full border-0"></iframe>
+                    </div>
+
+                    <p class="text-slate-700 dark:text-slate-200 font-bold leading-relaxed mb-6 text-lg">
+                        Gunung berapi adalah rekahan pada kerak bumi tempat keluarnya batuan cair, gas, dan abu dari dalam perut bumi. Tahukah kamu? Indonesia terletak di pertemuan 3 lempeng tektonik besar (Eurasia, Indo-Australia, dan Pasifik).
+                    </p>
+                    
+                    <div class="bg-blue-50 dark:bg-blue-900/40 border border-blue-200 dark:border-blue-700/50 rounded-2xl p-6 mb-5 shadow-sm">
+                        <h4 class="text-xl font-black text-blue-600 dark:text-blue-400 mb-2 drop-shadow-sm"><i class="fa-solid fa-earth-asia mr-3"></i>Cincin Api Pasifik (Ring of Fire)</h4>
+                        <p class="font-bold text-slate-700 dark:text-slate-200 text-lg">Karena posisi lempeng tersebut, Indonesia dilalui oleh jalur pegunungan berapi paling aktif di dunia. Itulah sebabnya kita punya lebih dari 127 gunung berapi aktif!</p>
+                    </div>
+
+                    <div class="bg-orange-50 dark:bg-orange-900/40 border border-orange-200 dark:border-orange-700/50 rounded-2xl p-6 shadow-sm">
+                        <h4 class="text-xl font-black text-orange-600 dark:text-duo-volcano mb-2 drop-shadow-sm"><i class="fa-solid fa-fire mr-3"></i>Ingat Perbedaannya!</h4>
+                        <p class="font-bold text-slate-700 dark:text-slate-200 text-lg"><strong>Magma:</strong> Cairan batuan yang sangat panas di dalam bumi.<br><strong>Lava:</strong> Magma yang sudah keluar mengalir di permukaan bumi.</p>
+                    </div>
+                `
+            },
+            {
+                title: "Tipe & Bentuk Letusan",
+                icon: "fa-burst",
+                content: `
+                    <h2 class="text-3xl md:text-4xl font-black text-slate-800 dark:text-white mb-6">Bentuk Gunung Api</h2>
+                    
+                    <img src="https://github.com/user-attachments/assets/526d31ce-bd93-4e0a-9f15-96bd4ec30d66" alt="Tipe dan Bentuk Letusan Gunung Berapi" class="w-full h-auto object-contain rounded-3xl border-4 border-slate-300 dark:border-slate-600 mb-8 shadow-lg bg-white dark:bg-slate-800 p-2">
+
+                    <p class="text-slate-700 dark:text-slate-200 font-bold mb-6 text-lg">Berdasarkan sifat letusannya, gunung api dibagi menjadi 3 bentuk utama:</p>
+
+                    <div class="space-y-5">
+                        <div class="card-duo p-6 border-l-8 border-l-blue-500 bg-white/60 dark:bg-slate-800/80">
+                            <h3 class="font-black text-slate-800 dark:text-white text-2xl mb-2">1. Gunung Api Perisai (Efusif)</h3>
+                            <p class="font-bold text-slate-600 dark:text-slate-300 text-lg leading-relaxed">Letusannya berupa lelehan lava yang sangat encer, mengalir pelan tanpa ledakan kuat. Bentuknya landai seperti perisai.<br><span class="text-base text-blue-600 dark:text-blue-400 font-black mt-2 inline-block">Contoh: Gn. Mauna Loa (Hawaii).</span></p>
+                        </div>
+                        <div class="card-duo p-6 border-l-8 border-l-red-500 bg-white/60 dark:bg-slate-800/80">
+                            <h3 class="font-black text-slate-800 dark:text-white text-2xl mb-2">2. Gunung Api Maar (Eksplosif)</h3>
+                            <p class="font-bold text-slate-600 dark:text-slate-300 text-lg leading-relaxed">Terjadi ledakan dahsyat hanya sekali, membentuk kawah melingkar seperti danau di puncaknya.<br><span class="text-base text-red-600 dark:text-red-400 font-black mt-2 inline-block">Contoh: Gn. Lamongan (Jatim), Danau Kelimutu.</span></p>
+                        </div>
+                        <div class="card-duo p-6 border-l-8 border-l-orange-500 bg-white/60 dark:bg-slate-800/80">
+                            <h3 class="font-black text-slate-800 dark:text-white text-2xl mb-2">3. Gunung Api Strato (Campuran)</h3>
+                            <p class="font-bold text-slate-600 dark:text-slate-300 text-lg leading-relaxed">Perpaduan letusan lelehan & ledakan secara bergantian, membuat gunung berbentuk kerucut berlapis. Ini bentuk paling umum di Indonesia!<br><span class="text-base text-orange-600 dark:text-orange-400 font-black mt-2 inline-block">Contoh: Gn. Merapi, Gn. Semeru, Gn. Kerinci.</span></p>
+                        </div>
+                    </div>
+                `
+            },
+            {
+                title: "Dampak Positif",
+                icon: "fa-leaf",
+                content: `
+                    <h2 class="text-3xl md:text-4xl font-black text-slate-800 dark:text-white mb-6">Berkah di Balik Bencana</h2>
+                    
+                    <img src="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=800&auto=format&fit=crop" alt="Pemandangan Hijau Pegunungan" class="w-full h-56 md:h-72 object-cover rounded-3xl border-4 border-slate-300 dark:border-slate-600 mb-8 shadow-lg">
+
+                    <p class="text-slate-700 dark:text-slate-200 font-bold mb-6 text-lg">Meskipun menakutkan, gunung berapi memberikan banyak manfaat bagi kehidupan manusia setelah beristirahat:</p>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <div class="card-duo p-6 text-center bg-emerald-50 dark:bg-emerald-900/40 border border-emerald-200 dark:border-emerald-700/30">
+                            <i class="fa-solid fa-seedling text-6xl text-emerald-500 dark:text-emerald-400 mb-4 block drop-shadow-md"></i>
+                            <h3 class="font-black text-slate-800 dark:text-white text-xl">Lahan Pertanian Subur</h3>
+                            <p class="font-bold text-slate-600 dark:text-slate-300 text-base mt-2">Abu vulkanik kaya mineral menyuburkan tanah. Hasil panen melimpah.</p>
+                        </div>
+                        <div class="card-duo p-6 text-center bg-blue-50 dark:bg-blue-900/40 border border-blue-200 dark:border-blue-700/30">
+                            <i class="fa-solid fa-bolt text-6xl text-blue-500 dark:text-blue-400 mb-4 block drop-shadow-md"></i>
+                            <h3 class="font-black text-slate-800 dark:text-white text-xl">Energi Panas Bumi</h3>
+                            <p class="font-bold text-slate-600 dark:text-slate-300 text-base mt-2">Geotermal dari gunung berapi diubah menjadi tenaga listrik (PLTP).</p>
+                        </div>
+                        <div class="card-duo p-6 text-center bg-orange-50 dark:bg-orange-900/40 border border-orange-200 dark:border-orange-700/30">
+                            <i class="fa-solid fa-gem text-6xl text-orange-500 dark:text-orange-400 mb-4 block drop-shadow-md"></i>
+                            <h3 class="font-black text-slate-800 dark:text-white text-xl">Bahan Tambang</h3>
+                            <p class="font-bold text-slate-600 dark:text-slate-300 text-base mt-2">Menghasilkan material bangunan (pasir, batu) hingga belerang & emas.</p>
+                        </div>
+                        <div class="card-duo p-6 text-center bg-indigo-50 dark:bg-indigo-900/40 border border-indigo-200 dark:border-indigo-700/30">
+                            <i class="fa-solid fa-camera-retro text-6xl text-indigo-500 dark:text-indigo-400 mb-4 block drop-shadow-md"></i>
+                            <h3 class="font-black text-slate-800 dark:text-white text-xl">Pariwisata</h3>
+                            <p class="font-bold text-slate-600 dark:text-slate-300 text-base mt-2">Pemandian air panas dan panorama kawah menjadi daya tarik wisata.</p>
+                        </div>
+                    </div>
+                `
+            },
+            {
+                title: "Dampak Negatif",
+                icon: "fa-triangle-exclamation",
+                content: `
+                    <h2 class="text-3xl md:text-4xl font-black text-red-600 dark:text-red-400 mb-6 drop-shadow-sm">Bahaya yang Mengancam!</h2>
+                    
+                    <img src="https://github.com/user-attachments/assets/3b99b8ba-0a7a-4dc9-ab34-e4c05ce75758" alt="Dampak Negatif Gunung Berapi" class="w-full h-56 md:h-72 object-cover rounded-3xl border-4 border-slate-300 dark:border-slate-600 mb-8 shadow-lg">
+
+                    <ul class="space-y-5">
+                        <li class="card-duo p-6 flex flex-col md:flex-row gap-5 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700/50">
+                            <div class="bg-red-100 dark:bg-red-950 p-4 rounded-full self-start">
+                                <i class="fa-solid fa-fire-flame-curved text-4xl text-red-500 drop-shadow"></i>
+                            </div>
+                            <div>
+                                <strong class="text-slate-800 dark:text-white text-2xl font-black block mb-2">Awan Panas (Wedhus Gembel)</strong>
+                                <span class="font-bold text-slate-600 dark:text-slate-300 text-lg block leading-relaxed">Campuran gas dan material padat bersuhu hingga 700°C yang meluncur sangat cepat menuruni lereng. Dapat membakar apapun yang dilaluinya.</span>
+                            </div>
+                        </li>
+                        <li class="card-duo p-6 flex flex-col md:flex-row gap-5 bg-white/60 dark:bg-slate-800/80 border border-slate-300 dark:border-slate-600">
+                            <div class="bg-slate-100 dark:bg-slate-900 p-4 rounded-full self-start">
+                                <i class="fa-solid fa-skull-crossbones text-4xl text-slate-500 dark:text-slate-400 drop-shadow"></i>
+                            </div>
+                            <div>
+                                <strong class="text-slate-800 dark:text-white text-2xl font-black block mb-2">Gas Beracun & Abu Vulkanik</strong>
+                                <span class="font-bold text-slate-600 dark:text-slate-300 text-lg block leading-relaxed">Mengeluarkan gas mematikan. Hujan abu vulkanik berpotensi membuat sesak napas (ISPA) dan meruntuhkan atap rumah.</span>
+                            </div>
+                        </li>
+                        <li class="card-duo p-6 flex flex-col md:flex-row gap-5 bg-orange-50 dark:bg-orange-900/30 border border-orange-200 dark:border-orange-700/50">
+                            <div class="bg-orange-100 dark:bg-orange-950 p-4 rounded-full self-start">
+                                <i class="fa-solid fa-water text-4xl text-orange-500 drop-shadow"></i>
+                            </div>
+                            <div>
+                                <strong class="text-slate-800 dark:text-white text-2xl font-black block mb-2">Lahar Dingin & Tsunami</strong>
+                                <span class="font-bold text-slate-600 dark:text-slate-300 text-lg block leading-relaxed">Banjir bandang lahar terjadi saat abu di puncak disapu hujan deras. Jika letusan terjadi di laut, dapat memicu Tsunami.</span>
+                            </div>
+                        </li>
+                    </ul>
+                `
+            },
+            {
+                title: "Mitigasi Bencana",
+                icon: "fa-person-running",
+                content: `
+                    <h2 class="text-3xl md:text-4xl font-black text-slate-800 dark:text-white mb-8">Cara Keselamatan Diri</h2>
+                    
+                    <div class="mb-8">
+                        <h3 class="font-black text-slate-800 dark:text-white text-xl mb-4">Tingkatan Status Gunung Api di Indonesia:</h3>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-center">
+                            <div class="bg-emerald-50 dark:bg-emerald-900/40 border border-emerald-300 dark:border-emerald-700/50 rounded-2xl p-4 shadow-sm">
+                                <div class="w-6 h-6 bg-emerald-500 rounded-full mx-auto mb-2 shadow-[0_0_12px_#10b981]"></div>
+                                <strong class="block text-base text-emerald-700 dark:text-emerald-300 font-black">1. Normal</strong>
+                                <span class="text-xs font-bold text-emerald-600 dark:text-emerald-100/70 mt-1 block">Aman, tidak ada aktivitas ekstra.</span>
+                            </div>
+                            <div class="bg-yellow-50 dark:bg-yellow-900/40 border border-yellow-300 dark:border-yellow-700/50 rounded-2xl p-4 shadow-sm">
+                                <div class="w-6 h-6 bg-yellow-400 rounded-full mx-auto mb-2 shadow-[0_0_12px_#facc15]"></div>
+                                <strong class="block text-base text-yellow-700 dark:text-yellow-300 font-black">2. Waspada</strong>
+                                <span class="text-xs font-bold text-yellow-600 dark:text-yellow-100/70 mt-1 block">Mulai ada aktivitas gempa vulkanik.</span>
+                            </div>
+                            <div class="bg-orange-50 dark:bg-orange-900/40 border border-orange-300 dark:border-orange-700/50 rounded-2xl p-4 shadow-sm">
+                                <div class="w-6 h-6 bg-orange-500 rounded-full mx-auto mb-2 shadow-[0_0_12px_#f97316]"></div>
+                                <strong class="block text-base text-orange-700 dark:text-orange-300 font-black">3. Siaga</strong>
+                                <span class="text-xs font-bold text-orange-600 dark:text-orange-100/70 mt-1 block">Peningkatan nyata, letusan bisa terjadi.</span>
+                            </div>
+                            <div class="bg-red-50 dark:bg-red-900/40 border border-red-300 dark:border-red-700/50 rounded-2xl p-4 shadow-sm">
+                                <div class="w-6 h-6 bg-red-500 rounded-full mx-auto mb-2 animate-pulse shadow-[0_0_15px_#ef4444]"></div>
+                                <strong class="block text-base text-red-700 dark:text-red-300 font-black">4. Awas</strong>
+                                <span class="text-xs font-bold text-red-600 dark:text-red-100/70 mt-1 block">Segera letusan! Wajib evakuasi.</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-5">
+                        <div class="card-duo p-6 border-l-8 border-l-yellow-500 bg-yellow-50 dark:bg-yellow-900/20">
+                            <h3 class="font-black text-slate-800 dark:text-white text-xl md:text-2xl mb-3"><i class="fa-solid fa-box-archive mr-3 text-yellow-500 drop-shadow"></i>Siaga Sebelum Letusan</h3>
+                            <p class="font-bold text-slate-600 dark:text-slate-300 text-lg leading-relaxed">Siapkan <strong>Tas Siaga Bencana</strong> (Masker, kacamata pelindung, makanan, obat, senter, dan dokumen). Kenali jalur evakuasi desa.</p>
+                        </div>
+                        <div class="card-duo p-6 border-l-8 border-l-red-500 bg-red-50 dark:bg-red-900/20">
+                            <h3 class="font-black text-slate-800 dark:text-white text-xl md:text-2xl mb-3"><i class="fa-solid fa-person-running mr-3 text-red-500 drop-shadow"></i>Aksi Saat Letusan</h3>
+                            <p class="font-bold text-slate-600 dark:text-slate-300 text-lg leading-relaxed">Jangan panik! Jauhi area lembah/sungai tempat aliran lahar. Gunakan masker & kacamata. Bergerak menuju Titik Kumpul.</p>
+                        </div>
+                        <div class="card-duo p-6 border-l-8 border-l-emerald-500 bg-emerald-50 dark:bg-emerald-900/20">
+                            <h3 class="font-black text-slate-800 dark:text-white text-xl md:text-2xl mb-3"><i class="fa-solid fa-house-circle-check mr-3 text-emerald-500 drop-shadow"></i>Tindakan Pasca Letusan</h3>
+                            <p class="font-bold text-slate-600 dark:text-slate-300 text-lg leading-relaxed">Tetap berada di tempat pengungsian sampai instansi berwenang (PVMBG/BNPB) menyatakan kondisi sudah benar-benar aman.</p>
+                        </div>
+                    </div>
+                `
+            }
+        ];
+
+        function renderMateriTabs() {
+            const ul = document.getElementById('materiTabs');
+            ul.innerHTML = '';
+            
+            // Variasi Tema Warna Khusus untuk setiap Kartu Materi
+            const themes = [
+                { border: '!border-2 !border-b-[6px] !border-blue-400 dark:!border-blue-500', bg: 'bg-blue-50/90 dark:bg-blue-900/40', text: 'text-blue-800 dark:text-blue-100', iconColor: 'text-blue-500 dark:text-blue-400', shadow: 'shadow-[0_8px_20px_rgba(59,130,246,0.3)] dark:shadow-[0_8px_20px_rgba(59,130,246,0.15)]' },
+                { border: '!border-2 !border-b-[6px] !border-orange-400 dark:!border-orange-500', bg: 'bg-orange-50/90 dark:bg-orange-900/40', text: 'text-orange-800 dark:text-orange-100', iconColor: 'text-orange-500 dark:text-orange-400', shadow: 'shadow-[0_8px_20px_rgba(249,115,22,0.3)] dark:shadow-[0_8px_20px_rgba(249,115,22,0.15)]' },
+                { border: '!border-2 !border-b-[6px] !border-emerald-400 dark:!border-emerald-500', bg: 'bg-emerald-50/90 dark:bg-emerald-900/40', text: 'text-emerald-800 dark:text-emerald-100', iconColor: 'text-emerald-500 dark:text-emerald-400', shadow: 'shadow-[0_8px_20px_rgba(16,185,129,0.3)] dark:shadow-[0_8px_20px_rgba(16,185,129,0.15)]' },
+                { border: '!border-2 !border-b-[6px] !border-red-400 dark:!border-red-500', bg: 'bg-red-50/90 dark:bg-red-900/40', text: 'text-red-800 dark:text-red-100', iconColor: 'text-red-500 dark:text-red-400', shadow: 'shadow-[0_8px_20px_rgba(239,68,68,0.3)] dark:shadow-[0_8px_20px_rgba(239,68,68,0.15)]' },
+                { border: '!border-2 !border-b-[6px] !border-indigo-400 dark:!border-indigo-500', bg: 'bg-indigo-50/90 dark:bg-indigo-900/40', text: 'text-indigo-800 dark:text-indigo-100', iconColor: 'text-indigo-500 dark:text-indigo-400', shadow: 'shadow-[0_8px_20px_rgba(99,102,241,0.3)] dark:shadow-[0_8px_20px_rgba(99,102,241,0.15)]' }
+            ];
+
+            materiData.forEach((item, index) => {
+                const isRead = userState.progress.materi[index];
+                const theme = themes[index % themes.length];
+                
+                // Desain centang bulat yang menonjol jika sudah dibaca
+                const iconCheck = isRead ? '<div class="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-900/80 border-2 border-emerald-400 dark:border-emerald-500 flex items-center justify-center shrink-0 shadow-sm"><i class="fa-solid fa-check text-emerald-600 dark:text-emerald-400 text-sm"></i></div>' : '';
+
+                ul.innerHTML += `
+                    <li onclick="showSubMateri(${index})" class="card-duo cursor-pointer w-64 md:w-full p-4 md:p-5 ${theme.bg} ${theme.border} ${theme.shadow} transition-all duration-300 flex items-center gap-4 hover:-translate-y-1.5 hover:shadow-[0_15px_25px_rgba(0,0,0,0.15)] mb-3 relative overflow-hidden group">
+                        
+                        <!-- Efek cahaya putih melintas saat kursor diarahkan (Hover Glare Effect) -->
+                        <div class="absolute top-0 -left-[100%] w-1/2 h-full bg-gradient-to-r from-transparent via-white/50 dark:via-white/10 to-transparent skew-x-12 group-hover:left-[200%] transition-all duration-700 ease-in-out z-0"></div>
+
+                        <div class="w-12 h-12 bg-white/90 dark:bg-slate-800/90 rounded-xl flex items-center justify-center shrink-0 border-2 border-white dark:border-slate-700 shadow-sm relative z-10">
+                            <i class="fa-solid ${item.icon} text-2xl ${theme.iconColor} drop-shadow-sm"></i>
+                        </div>
+                        
+                        <span class="font-black flex-1 leading-snug text-sm md:text-base ${theme.text} relative z-10">${item.title}</span>
+                        
+                        <div class="shrink-0 flex items-center justify-center relative z-10">
+                            ${iconCheck}
+                        </div>
+                    </li>
+                `;
+            });
+        }
+
+        function showSubMateri(index) {
+            playSound('click');
+            const contentArea = document.getElementById('materiContentArea');
+            contentArea.innerHTML = materiData[index].content;
+            
+            contentArea.style.opacity = 0;
+            setTimeout(() => { contentArea.style.opacity = 1; }, 50);
+
+            if(!userState.progress.materi[index]) {
+                userState.progress.materi[index] = true;
+                saveData();
+                renderMateriTabs(); 
+            }
+        }
+
+        const questions = [
+            { q: "Batuan cair panas yang masih berada di DALAM perut bumi disebut...", o: ["Lava", "Magma", "Kawah", "Lahar"], a: 1 },
+            { q: "Gunung api kerucut (Strato) terbentuk dari tipe letusan...", o: ["Efusif saja", "Eksplosif saja", "Campuran (Strato)", "Bawah Laut"], a: 2 },
+            { q: "Kenapa Indonesia punya banyak gunung berapi?", o: ["Dekat garis khatulistiwa", "Dilalui Cincin Api Pasifik", "Dikelilingi Samudra Hindia", "Angin Muson"], a: 1 },
+            { q: "Letusan meledak (Eksplosif) yang sangat dahsyat pernah terjadi di Indonesia, yaitu pada gunung...", o: ["Krakatau", "Mauna Loa", "Kilauea", "Himalaya"], a: 0 },
+            { q: "Apa dampak POSITIF setelah letusan berlalu?", o: ["Air sungai jadi beracun", "Tanaman mati terbakar", "Tanah jadi sangat subur", "Terjadi gempa terus"], a: 2 },
+            { q: "Awan panas yang meluncur turun dengan suhu 700°C sering disebut...", o: ["Hujan abu", "Wedhus Gembel", "Lahar dingin", "Gas belerang"], a: 1 },
+            { q: "Persiapan yang benar SEBELUM letusan terjadi adalah...", o: ["Menyiapkan tas siaga", "Lari ke arah kawah", "Membersihkan atap", "Bangun rumah di kawah"], a: 0 },
+            { q: "Saat evakuasi, kenapa kita dilarang bersembunyi di sungai/lembah?", o: ["Air sungai jadi panas", "Ancaman lahar dingin", "Ikan akan mati", "Tim SAR sulit mencari"], a: 1 },
+            { q: "Barang wajib dipakai saat hujan abu vulkanik?", o: ["Jas hujan & payung", "Sepatu boot & sarung tangan", "Masker & kacamata", "Helm proyek"], a: 2 },
+            { q: "Energi listrik ramah lingkungan dari panas gunung berapi disebut...", o: ["Geothermal", "Hidroelektrik", "Energi Surya", "Biogas"], a: 0 }
+        ];
+
+        let currentQIndex = 0; let score = 0; let answerSelected = false;
+
+        function startQuiz() {
+            playSound('click');
+            currentQIndex = 0; score = 0;
+            document.getElementById('quizIntro').classList.add('hidden');
+            document.getElementById('quizResult').classList.add('hidden');
+            document.getElementById('quizArea').classList.remove('hidden');
+            renderQuestion();
+        }
+
+        function renderQuestion() {
+            answerSelected = false;
+            const qData = questions[currentQIndex];
+            document.getElementById('quizNumber').textContent = `${currentQIndex + 1}/10`;
+            document.getElementById('quizProgress').style.width = `${((currentQIndex) / questions.length) * 100}%`;
+            
+            document.getElementById('questionText').textContent = qData.q;
+            document.getElementById('nextBtnContainer').classList.add('hidden');
+            
+            const optionsArea = document.getElementById('optionsArea');
+            optionsArea.innerHTML = '';
+            
+            qData.o.forEach((opt, idx) => {
+                optionsArea.innerHTML += `
+                    <button onclick="selectAnswer(${idx})" class="w-full text-left p-6 card-duo card-duo-hover bg-white/60 dark:bg-slate-800/60 text-slate-700 dark:text-slate-200 font-black text-xl shadow-sm border border-slate-300 dark:border-slate-600 transition-all duration-200" id="opt-${idx}">
+                        <span class="inline-block w-10 h-10 text-center leading-10 rounded-xl border-2 border-slate-300 dark:border-slate-500 text-slate-500 dark:text-slate-300 mr-4 font-black bg-slate-100 dark:bg-slate-900 transition-colors">${String.fromCharCode(65 + idx)}</span> 
+                        ${opt}
+                    </button>
+                `;
+            });
+        }
+
+        function selectAnswer(idx) {
+            if(answerSelected) return;
+            answerSelected = true;
+            
+            const qData = questions[currentQIndex];
+            const isCorrect = (idx === qData.a);
+            
+            // Nonaktifkan semua tombol dan buat menjadi abu-abu pudar
+            for(let i=0; i<4; i++) {
+                const btn = document.getElementById(`opt-${i}`);
+                btn.disabled = true;
+                btn.classList.remove('card-duo-hover', 'bg-white/60', 'dark:bg-slate-800/60', 'text-slate-700', 'dark:text-slate-200', 'border-slate-300', 'dark:border-slate-600');
+                btn.classList.add('bg-slate-100/50', 'dark:bg-slate-900/50', 'border-slate-200', 'dark:border-slate-800', 'text-slate-400', 'dark:text-slate-600', 'opacity-60');
+                
+                const span = btn.querySelector('span');
+                span.classList.remove('bg-slate-100', 'dark:bg-slate-900', 'text-slate-500', 'dark:text-slate-300', 'border-slate-300', 'dark:border-slate-500');
+                span.classList.add('border-slate-200', 'dark:border-slate-700', 'text-slate-400');
+            }
+
+            const selectedBtn = document.getElementById(`opt-${idx}`);
+            const selectedSpan = selectedBtn.querySelector('span');
+            selectedBtn.classList.remove('opacity-60', 'text-slate-400', 'dark:text-slate-600', 'border-slate-200', 'dark:border-slate-800', 'bg-slate-100/50', 'dark:bg-slate-900/50');
+
+            const nextBtn = document.getElementById('btnNextAction');
+
+            if(isCorrect) {
+                playSound('correct');
+                // Warna Hijau Solid untuk Jawaban Benar
+                selectedBtn.classList.add('bg-emerald-500', 'dark:bg-emerald-600', 'text-white', 'border-emerald-700', 'dark:border-emerald-800', 'shadow-md', 'transform', '-translate-y-1');
+                selectedSpan.classList.remove('border-slate-200', 'dark:border-slate-700', 'text-slate-400');
+                selectedSpan.classList.add('bg-emerald-600', 'dark:bg-emerald-700', 'border-emerald-300', 'dark:border-emerald-400', 'text-white');
+                
+                score += 10;
+                nextBtn.className = "w-full btn-duo btn-blue font-black py-4 rounded-2xl text-2xl tracking-wide uppercase shadow-lg";
+            } else {
+                playSound('wrong');
+                // Warna Merah Solid untuk Jawaban Salah
+                selectedBtn.classList.add('bg-red-500', 'dark:bg-red-600', 'text-white', 'border-red-700', 'dark:border-red-800', 'shadow-md', 'transform', 'translate-y-1');
+                selectedSpan.classList.remove('border-slate-200', 'dark:border-slate-700', 'text-slate-400');
+                selectedSpan.classList.add('bg-red-600', 'dark:bg-red-700', 'border-red-300', 'dark:border-red-400', 'text-white');
+                
+                // Tampilkan Jawaban yang Benar dengan Hijau Solid
+                const correctBtn = document.getElementById(`opt-${qData.a}`);
+                const correctSpan = correctBtn.querySelector('span');
+                
+                correctBtn.classList.remove('opacity-60', 'text-slate-400', 'dark:text-slate-600', 'border-slate-200', 'dark:border-slate-800', 'bg-slate-100/50', 'dark:bg-slate-900/50');
+                correctBtn.classList.add('bg-emerald-500', 'dark:bg-emerald-600', 'text-white', 'border-emerald-700', 'dark:border-emerald-800', 'shadow-md');
+                
+                correctSpan.classList.remove('border-slate-200', 'dark:border-slate-700', 'text-slate-400');
+                correctSpan.classList.add('bg-emerald-600', 'dark:bg-emerald-700', 'border-emerald-300', 'dark:border-emerald-400', 'text-white');
+                
+                nextBtn.className = "w-full btn-duo btn-red font-black py-4 rounded-2xl text-2xl tracking-wide uppercase shadow-lg text-white border-b-4 border-red-800";
+            }
+
+            document.getElementById('nextBtnContainer').classList.remove('hidden');
+            if(currentQIndex === questions.length - 1) {
+                nextBtn.textContent = 'Selesai & Cek Nilai';
+            } else {
+                nextBtn.textContent = 'Soal Selanjutnya';
+            }
+        }
+
+        function nextQuestion() {
+            playSound('click');
+            currentQIndex++;
+            if(currentQIndex < questions.length) {
+                renderQuestion();
+            } else {
+                finishQuiz();
+            }
+        }
+
+        function finishQuiz() {
+            document.getElementById('quizArea').classList.add('hidden');
+            document.getElementById('quizResult').classList.remove('hidden');
+            
+            const scoreEl = document.getElementById('scoreText');
+            const iconEl = document.getElementById('resultIcon');
+            scoreEl.textContent = score;
+            
+            if(score >= 80) {
+                iconEl.innerHTML = '<i class="fa-solid fa-crown text-8xl text-duo-yellow drop-shadow-xl"></i>';
+                playSound('correct');
+            } else if(score >= 50) {
+                iconEl.innerHTML = '<i class="fa-solid fa-thumbs-up text-8xl text-duo-blue drop-shadow-xl"></i>';
+            } else {
+                iconEl.innerHTML = '<i class="fa-solid fa-face-sad-tear text-8xl text-slate-400 dark:text-slate-500 drop-shadow-lg"></i>';
+            }
+
+            if(!userState.progress.kuisSelesai) {
+                userState.progress.kuisSelesai = true;
+                saveData();
+            }
+            saveScoreToLeaderboard(score);
+        }
+
+        initFirebase();
+    </script>
+</body>
+</html>
