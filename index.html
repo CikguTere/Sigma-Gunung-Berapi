@@ -513,7 +513,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, getDoc, collection, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // Expose functions to window
         window.login = login;
@@ -552,34 +552,49 @@
 
         // --- FIREBASE SETUP ---
         let app, db, auth, currentUserId;
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        // Ganti dengan konfigurasi Firebase Anda sendiri
+        const firebaseConfig = {
+            // apiKey: "YOUR_API_KEY",
+            // authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+            // projectId: "YOUR_PROJECT_ID",
+            // storageBucket: "YOUR_PROJECT_ID.appspot.com",
+            // messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+            // appId: "YOUR_APP_ID"
+        };
+        const appId = 'mpi-gunung-berapi'; // ID unik untuk aplikasi ini
 
         async function initFirebase() {
-            if (typeof __firebase_config === 'undefined') return;
             try {
-                const firebaseConfig = JSON.parse(__firebase_config);
-                app = initializeApp(firebaseConfig);
-                db = getFirestore(app);
-                auth = getAuth(app);
+                // Periksa apakah konfigurasi Firebase valid sebelum inisialisasi
+                if (Object.keys(firebaseConfig).length > 0 && firebaseConfig.apiKey) {
+                    app = initializeApp(firebaseConfig);
+                    db = getFirestore(app);
+                    auth = getAuth(app);
 
-                let userCredential;
-                if (typeof __initial_auth_token !== 'undefined') {
-                    userCredential = await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
+                    let userCredential;
                     userCredential = await signInAnonymously(auth);
+                    currentUserId = userCredential.user.uid;
+                    
+                    listenLeaderboard();
+                } else {
+                    console.warn("Konfigurasi Firebase belum diisi. Papan peringkat real-time menggunakan LocalStorage sebagai fallback.");
+                    // Fallback ke LocalStorage jika Firebase tidak ada
+                    listenLeaderboardLocal();
                 }
-                currentUserId = userCredential.user.uid;
-                
-                listenLeaderboard();
             } catch (e) {
                 console.error("Gagal inisialisasi Firebase:", e);
+                listenLeaderboardLocal();
             }
         }
 
         async function saveScoreToLeaderboard(score) {
-            if (!auth || !auth.currentUser) return;
+            // 1. Simpan ke LocalStorage sebagai fallback
+            saveScoreToLocal(score);
+
+            // 2. Jika Firebase aktif, simpan ke Cloud
+            if (!auth || !auth.currentUser || !db) return;
             try {
-                const ref = doc(db, 'artifacts', appId, 'public', 'data', 'leaderboard', currentUserId);
+                const ref = doc(db, 'leaderboard', currentUserId);
                 const docSnap = await getDoc(ref);
                 let shouldSave = true;
                 
@@ -595,15 +610,61 @@
                         sekolah: userState.sekolah,
                         provinsi: userState.provinsi,
                         score: score,
-                        timestamp: Date.now()
+                        timestamp: serverTimestamp()
                     }, { merge: true });
                 }
-            } catch(e) {}
+            } catch(e) {
+                console.error("Gagal menyimpan skor ke Firebase:", e);
+            }
+        }
+
+        // Fungsi Fallback untuk LocalStorage
+        function saveScoreToLocal(score) {
+            let localLeaderboard = JSON.parse(localStorage.getItem('mpiDuoLeaderboard') || '[]');
+            
+            // Cari apakah user ini (berdasarkan nama & sekolah) sudah ada
+            const existingIndex = localLeaderboard.findIndex(item => 
+                item.nama === userState.nama && item.sekolah === userState.sekolah
+            );
+
+            if (existingIndex !== -1) {
+                // Update skor jika lebih tinggi
+                if (score > localLeaderboard[existingIndex].score) {
+                    localLeaderboard[existingIndex].score = score;
+                    localLeaderboard[existingIndex].timestamp = Date.now();
+                }
+            } else {
+                // Tambahkan user baru
+                localLeaderboard.push({
+                    userId: 'local_' + Date.now(),
+                    nama: userState.nama,
+                    sekolah: userState.sekolah,
+                    provinsi: userState.provinsi,
+                    score: score,
+                    timestamp: Date.now()
+                });
+            }
+
+            localStorage.setItem('mpiDuoLeaderboard', JSON.stringify(localLeaderboard));
+            
+            // Render ulang jika tidak menggunakan Firebase
+            if (!db) listenLeaderboardLocal();
+        }
+
+        function listenLeaderboardLocal() {
+            let data = JSON.parse(localStorage.getItem('mpiDuoLeaderboard') || '[]');
+            
+            data.sort((a, b) => {
+                if (b.score !== a.score) return b.score - a.score;
+                return a.timestamp - b.timestamp;
+            });
+            
+            renderLeaderboard(data);
         }
 
         function listenLeaderboard() {
-            if (!auth || !auth.currentUser) return;
-            const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'leaderboard');
+            if (!auth || !auth.currentUser || !db) return;
+            const colRef = collection(db, 'leaderboard');
             
             onSnapshot(colRef, (snapshot) => {
                 let data = [];
@@ -611,10 +672,16 @@
                 
                 data.sort((a, b) => {
                     if (b.score !== a.score) return b.score - a.score;
-                    return a.timestamp - b.timestamp;
+                    // Handle timestamp dari Firebase yang mungkin null sebentar saat baru ditulis
+                    const timeA = a.timestamp ? a.timestamp.toMillis() : Date.now();
+                    const timeB = b.timestamp ? b.timestamp.toMillis() : Date.now();
+                    return timeA - timeB;
                 });
                 
                 renderLeaderboard(data);
+            }, (error) => {
+                 console.error("Error mendengarkan perubahan leaderboard:", error);
+                 listenLeaderboardLocal(); // Fallback jika gagal mendengarkan
             });
         }
 
@@ -630,13 +697,16 @@
 
             data.forEach((item, index) => {
                 let rankBadge = '';
-                if (index === 0) rankBadge = '<div class="w-14 h-14 shrink-0 rounded-full bg-duo-yellow border-4 border-yellow-600 flex items-center justify-center text-slate-900 font-black text-2xl shadow-md"><i class="fa-solid fa-crown absolute -mt-10 text-yellow-500 text-lg drop-shadow"></i>1</div>';
-                else if (index === 1) rankBadge = '<div class="w-14 h-14 shrink-0 rounded-full bg-slate-200 dark:bg-slate-300 border-4 border-slate-400 flex items-center justify-center text-slate-800 font-black text-2xl shadow-md">2</div>';
-                else if (index === 2) rankBadge = '<div class="w-14 h-14 shrink-0 rounded-full bg-orange-500 border-4 border-orange-600 flex items-center justify-center text-white font-black text-2xl shadow-md">3</div>';
+                if (index === 0) rankBadge = '<div class="w-14 h-14 shrink-0 rounded-full bg-yellow-400 border-4 border-yellow-500 flex items-center justify-center text-yellow-900 font-black text-2xl shadow-md"><i class="fa-solid fa-crown absolute -mt-10 text-yellow-400 text-lg drop-shadow"></i>1</div>';
+                else if (index === 1) rankBadge = '<div class="w-14 h-14 shrink-0 rounded-full bg-slate-300 border-4 border-slate-400 flex items-center justify-center text-slate-800 font-black text-2xl shadow-md">2</div>';
+                else if (index === 2) rankBadge = '<div class="w-14 h-14 shrink-0 rounded-full bg-orange-400 border-4 border-orange-500 flex items-center justify-center text-white font-black text-2xl shadow-md">3</div>';
                 else rankBadge = `<div class="w-14 h-14 shrink-0 rounded-full bg-white dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300 font-black border-2 border-slate-300 dark:border-slate-600 text-xl shadow-sm">${index+1}</div>`;
 
-                const isMe = item.userId === currentUserId;
-                const borderClass = isMe ? 'border-duo-blue bg-blue-50 dark:bg-blue-900/40' : 'border-slate-200 dark:border-slate-700 bg-white/80 dark:bg-slate-800/80';
+                // Identifikasi apakah ini skor miliki user yang sedang aktif
+                const isMe = (item.userId === currentUserId) || 
+                             (!db && item.nama === userState.nama && item.sekolah === userState.sekolah);
+
+                const borderClass = isMe ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/40' : 'border-slate-200 dark:border-slate-700 bg-white/80 dark:bg-slate-800/80';
                 
                 container.innerHTML += `
                     <div class="flex items-center gap-5 p-5 rounded-2xl border ${borderClass} border-b-4 mb-4 shadow-sm">
@@ -803,8 +873,14 @@
                 content: `
                     <h2 class="text-3xl md:text-4xl font-black text-slate-800 dark:text-white mb-6">Pengertian & Asal Mula</h2>
                     
-                    <div class="w-full rounded-3xl border-4 border-slate-300 dark:border-slate-600 overflow-hidden shadow-lg mb-8 bg-slate-100 dark:bg-slate-900 relative z-10 h-[400px] md:h-[450px]">
+                    <div class="w-full rounded-3xl border-4 border-slate-300 dark:border-slate-600 overflow-hidden shadow-lg mb-2 bg-slate-100 dark:bg-slate-900 relative z-10 h-[400px] md:h-[450px]">
                         <iframe src='https://viewer.assemblrworld.com/Embed/-papELtwrueya5TY3W3C' allow="camera; microphone; gyroscope; accelerometer; magnetometer; xr-spatial-tracking; fullscreen" allowfullscreen class="w-full h-full border-0"></iframe>
+                    </div>
+                    
+                    <div class="text-center mb-8">
+                        <span class="inline-block bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300 font-bold px-4 py-2 rounded-full text-sm shadow-sm border border-orange-200 dark:border-orange-800/50">
+                            <i class="fa-solid fa-hand-pointer mr-2 animate-bounce"></i> Klik gambar di atas untuk melihat bagian-bagiannya secara interaktif!
+                        </span>
                     </div>
 
                     <p class="text-slate-700 dark:text-slate-200 font-bold leading-relaxed mb-6 text-lg">
